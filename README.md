@@ -1,0 +1,45 @@
+# Development Skills
+
+A curated collection of engineering guidance for the project’s UI, API, and cross-stack work. Each skill is a self-contained `SKILL.md` that defines when it applies, the standards to follow, and the validation expected before work is considered complete.
+
+## Available skills
+
+| Skill | Purpose |
+| --- | --- |
+| [`ui-skills`](skills/ui-skills/SKILL.md) | Angular architecture, shared components, forms, accessibility, typography, and RxJS practices. |
+| [`api-skills`](skills/api-skills/SKILL.md) | Laravel and Lighthouse GraphQL architecture, authorization, validation, transactions, queries, and error handling. |
+| [`shared-skills`](skills/shared-skills/SKILL.md) | Standards shared between the UI and API, including permissions, module availability, uploads, and shared components. |
+| [`development-standards-skills`](skills/development-standards-skills/SKILL.md) | Security-first engineering principles, conflict resolution, and feature readiness checklists. |
+| [`planning-skills`](skills/planning-skills/SKILL.md) | Interactive implementation planning workflow for requests that explicitly require a plan. |
+| [`findings-skills`](skills/findings-skills/SKILL.md) | Surgical resolution of code-review findings and bugs, including regression analysis and verification. |
+
+## Using a skill
+
+Read the relevant `SKILL.md` before implementing work governed by that skill. Skills may be invoked by their name or by their documented command prefix, such as `/ui`, `/api`, `/shared`, `/plan`, or `/findings`.
+
+When more than one skill applies, use the smallest set that covers the task. Cross-stack changes generally require both the relevant UI or API skill and [`shared-skills`](skills/shared-skills/SKILL.md).
+
+## Engineering principles
+
+- Validate and sanitize all input at system boundaries.
+- Enforce authentication, authorization, and module availability consistently.
+- Protect secrets and sensitive data; never commit credentials.
+- Preserve existing public contracts unless a change is explicitly requested.
+- Prefer shared components and established project patterns over one-off implementations.
+- Verify changes with focused tests, linting, or an appropriate manual check.
+
+## Repository layout
+
+```text
+.
+├── README.md
+└── skills/
+    ├── api-skills/
+    ├── development-standards-skills/
+    ├── findings-skills/
+    ├── planning-skills/
+    ├── shared-skills/
+    └── ui-skills/
+```
+
+Each skill directory can evolve independently, but its `SKILL.md` should remain clear about scope, trigger conditions, implementation rules, and verification requirements.
