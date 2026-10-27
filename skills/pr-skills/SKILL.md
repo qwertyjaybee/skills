@@ -53,16 +53,70 @@ description: Pull request, code review, diff discipline, and code modification g
 ---
 
 ## 6. Code Review & PR Output Format
-When reviewing code or submitting PR feedback, process each file separately:
-1. State any **Assumptions**.
-2. Provide a **Review Summary**:
-   - **Overall Compliance:** PASS (No violations) / PASS WITH ISSUES (Only Minor/Major violations) / FAIL (≥1 Critical violations or insecure code)
-   - **Critical Issues:** [Count] (Security, data corruption, authorization bypass)
-   - **Major Issues:** [Count] (Architecture violations, performance, missing validation)
-   - **Minor Issues:** [Count] (Naming, style, consistency)
-3. If violations are found, provide a violations table followed by only the modified code sections:
+When conducting a PR code review, audit, or production readiness review, always format the response using the following structured report format:
 
-| Severity | Line/Area | Standard Violated | Required Fix |
-| :--- | :--- | :--- | :--- |
-| Minor | `ngOnDestroy` | UI: Subscriptions | Replace with `takeUntilDestroyed()` |
-| Critical | `DB::beginTransaction()` | API: Transaction Safety | Use `DB::transaction()` and queue external I/O |
+### Report Template & Structure:
+
+```markdown
+# Production Readiness Review & PR Code Review Report
+**Scope:** <repository / modules reviewed> (Branch `<branch-name>`)  
+**Evaluation Standards:** `/pr-skills`, `/api-skills`, `/ui-skills`, `/development-standards-skills`  
+**Status:** <ALL REMEDIATIONS COMPLETED — READY FOR PRODUCTION | REMEDIATION REQUIRED | PASS (Production Ready)>  
+**Date:** <Formatted Date>
+
+---
+
+## 1. Executive Summary & Final Verdict
+
+| Repository / Layer | Initial Verdict | Final Verdict | Critical Issues | Major Issues | Minor Issues | Total Files Evaluated |
+| :--- | :--- | :--- | :---: | :---: | :---: | :---: |
+| `core-aairi/api` | PASS WITH ISSUES | PASS (Production Ready) | 0 | 0 | 0 | 10 |
+| `core-aairi/ui`  | PASS WITH ISSUES | PASS (Production Ready) | 0 | 0 | 0 | 6 |
+
+### Verdict Criteria:
+- **PASS (Production Ready):** 0 Critical, 0 Major, 0 Minor issues remaining; fully compliant with security, transactional, and architectural standards.
+- **PASS WITH ISSUES:** Minor/Major violations identified (naming, style, missing non-critical validation, OnPush, documentation).
+- **FAIL:** ≥1 Critical violation (security vulnerability, authentication/authorization bypass, risk of data corruption, unhandled transaction rollback).
+
+---
+
+## 2. Final File Status (Good vs Bad)
+
+Categorize every evaluated file under its respective repository or layer. Always link files with clickable markdown links (`[filepath](file:///absolute/path)`).
+
+### 2.1 Backend (`core-aairi/api`)
+| File Path | Status | Details |
+| :--- | :--- | :--- |
+| [`app/GraphQL/Mutations/.../Example.php`](file:///opt/core-aairi/api/app/GraphQL/Mutations/.../Example.php) | `GOOD` | Uses explicit `DB::beginTransaction()`, `DB::commit()`, `DB::rollBack()` in catches with `Log::info()`, lockForUpdate() on ordering. |
+| [`app/GraphQL/Queries/.../Example.php`](file:///opt/core-aairi/api/app/GraphQL/Queries/.../Example.php) | `GOOD (Updated)` | Added strict column whitelisting on `$sortBy`, sanitized sort direction, removed dead code. |
+| [`database/migrations/..._example.php`](file:///opt/core-aairi/api/database/migrations/..._example.php) | `GOOD` | Reversible down() method, indexed column. |
+
+### 2.2 Frontend (`core-aairi/ui`)
+| File Path | Status | Details |
+| :--- | :--- | :--- |
+| [`src/app/modules/.../example.component.ts`](file:///opt/core-aairi/ui/src/app/modules/.../example.component.ts) | `GOOD` | `ChangeDetectionStrategy.OnPush`, safe navigation operators `?.`, proper cleanup. |
+| [`src/app/modules/.../example.component.html`](file:///opt/core-aairi/ui/src/app/modules/.../example.component.html) | `GOOD` | Proper tooltips, native form submission buttons, overflow-wrap on dynamic text. |
+
+*Allowed Status values: `GOOD`, `GOOD (Updated)`, `BAD (Needs Fix)`, `FLAGGED`.*
+
+---
+
+## 3. Detailed Summary of Executed Fixes (or Violations & Remediations)
+
+Group each issue or feature area into a dedicated subsection:
+
+### 3.1 <Feature / Issue / Fix Title>
+- **Problem:** Clear, technical description of the violation, bug, edge-case, or architectural defect.
+- **Fix Applied:** Concrete, bulleted list of changes made to resolve the problem cleanly (schema updates, migrations, query ordering, UI bindings, etc.).
+
+### 3.2 <Feature / Issue / Fix Title>
+- **Problem:** ...
+- **Fix Applied:** ...
+
+---
+
+## 4. Verification & Clean Status
+- **Linter & Syntax:** Verified clean compilation and static analysis.
+- **Git Hygiene:** Diffs are minimal, scoped strictly to required changes, zero extraneous edits or deletions of working code.
+```
+
