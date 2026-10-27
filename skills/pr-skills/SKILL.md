@@ -21,6 +21,7 @@ description: Pull request, code review, diff discipline, and code modification g
 
 ## 2. Placement of New Code & Imports
 - **New Code Always at the Bottom:** Always append newly added methods, functions, properties, constants, or types to the **last part / bottom** of the class, interface, type definition, or file, rather than prepending or inserting them at the top.
+- **Section Banners & Member Organization:** In structured classes (such as Angular components with section banners `// =========================================================================`), place new members at the **bottom of their corresponding logical section** (e.g., `State: ...`, `Domain Methods`, `Lifecycle`) rather than scattering them haphazardly or breaking section organization.
 - **New Imports at the Bottom of Import Blocks:** Always place newly added `use` statements (PHP) or `import` statements (TypeScript/Angular) at the **bottom / last part** of the existing imports list, never at the top.
 - **Use Imports Over Inline Qualified Names:** Always add proper `use` statements (PHP) or `import` statements (TypeScript/Angular) instead of using inline fully-qualified namespaces.
 

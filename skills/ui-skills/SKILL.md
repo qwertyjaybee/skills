@@ -15,8 +15,29 @@ description: Comprehensive Angular UI engineering guidelines, component architec
   - Cancel previous in-flight requests automatically with `switchMap(() => this._fetchItems().pipe(catchError(() => of(null))))`.
   - Always pair with `distinctUntilChanged()`, `takeUntilDestroyed()`, and extract reusable data-fetching/applying helper methods (e.g. `_fetchItems()`, `_applyItems()`) shared across search streams, pagination changes, and delete/reload handlers.
 - **Placement of New Code & Imports:**
-  - Append new methods, functions, variables, inputs, outputs, and properties to the **last part / bottom** of the class or file.
+  - Append new methods, functions, variables, inputs, outputs, and properties to the **last part / bottom** of their respective class section or file.
   - Append new `import` statements at the **bottom / last part** of the imports block, never at the top.
+- **Component Class Organization & Section Banners (Clean Code & Easy Maintenance):**
+  To ensure enterprise maintainability and readability across complex Angular components, organize `.component.ts` classes into clear, logical sections separated by standard 3-line comment banners:
+  ```typescript
+  // =========================================================================
+  // <Section Title>
+  // =========================================================================
+  ```
+  **Standard Member Ordering & Structure:**
+  1. `Injected Services`: Modern `inject(...)` tokens (`DestroyRef`, `BreakpointObserver`, `Router`, etc.).
+  2. `View Children`: `@ViewChild` and `@ViewChildren` queries.
+  3. `Inputs & Outputs`: `@Input()` and `@Output()` properties.
+  4. `State: <Category>`: Categorize component state into focused, single-purpose groups:
+     - `State: Hierarchy & Layout` (or `State: Layout & UI Controls`) (`isCompact`, `hierarchyOpen`, `hierarchyCollapsed`)
+     - `State: Loading & Operation Flags` (`isLoading`, `loadFailed`, `isReordering`, `isEditing`, `isCreating`)
+     - `State: Data & Permissions` (`membershipTiers`, `user_permissions`)
+     - `State: Form & Media` (`form!: FormGroup`, `iconFile`, `iconPreview`, `removeIcon`)
+     - `State: Insertion & Pagination` (`targetInsertIndex`, `pageSizeOptions`, `pagination`)
+  5. `Constructor & Lifecycle`: `constructor(...)`, `ngOnInit()`, `ngAfterViewInit()`. Subscriptions managed via `pipe(takeUntilDestroyed(this.destroyRef))`.
+  6. `Permission & Capability Helpers`: Role/capability checks (`canCreate()`, `canEdit()`, `canArchive()`) and lightweight boolean getters.
+  7. `Domain-Specific Method Groups`: Group component methods cleanly by domain responsibility (e.g., `Hierarchy Navigation & Drawer Control`, `Form Management & Submission`, `Data Fetching & Subscriptions`, `Dialog & Modal Handlers`, `Drag & Drop / Reordering Handlers`, `Utility Helpers`).
+  When adding new properties or methods to an organized component, place them inside their corresponding designated section rather than scattering them arbitrarily.
 - **Ownership:** Compute ownership (e.g. `isOwner`) in parent feature components and pass down via `@Input()`. Only presentational child components should avoid injecting `AuthService`.
 - **Button Component (`app-button`):**
   - Location: `ui/src/app/shared/components/button/button.component.ts` (Selector: `app-button`, Standalone: `true`).
