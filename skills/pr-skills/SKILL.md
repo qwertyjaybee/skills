@@ -121,3 +121,17 @@ Group each issue or feature area into a dedicated subsection:
 - **Git Hygiene:** Diffs are minimal, scoped strictly to required changes, zero extraneous edits or deletions of working code.
 ```
 
+
+---
+
+## 7. Commit Message Generation (Staged Files Only)
+When generating a commit message (see [`.agents/skills/commit-skills/SKILL.md`](../commit-skills/SKILL.md)):
+- **Strictly Staged Files Only:** Inspect **only** staged changes (`git diff --staged --name-status` and `git diff --staged`). This includes staged new files (`A`), staged modifications (`M`), and staged deletions (`D`). Never read or include unstaged modifications (`git diff`) or untracked files that have not yet been staged.
+- **No Staged Files Handling:** If `git diff --staged` is empty, halt and inform the user that no files are staged. Never fabricate a commit message from unstaged files.
+- **Required Format:**
+  ```text
+  {{branch name}}
+    •   (message)
+  ```
+  Include two or more `  •   (message)` bullet lines when multiple features or logical changes are staged.
+- **Reader-Friendly Descriptions:** Write clear, plain-language descriptions of the features added or modified. Never use generic phrases (e.g., *"update files"*, *"fix bug"*) or raw function, class, or GraphQL query/mutation names.

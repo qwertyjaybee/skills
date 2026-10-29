@@ -12,10 +12,12 @@ A curated collection of engineering guidance for the project’s UI, API, and cr
 | [`development-standards-skills`](skills/development-standards-skills/SKILL.md) | Security-first engineering principles, conflict resolution, and feature readiness checklists. |
 | [`planning-skills`](skills/planning-skills/SKILL.md) | Interactive implementation planning workflow for requests that explicitly require a plan. |
 | [`findings-skills`](skills/findings-skills/SKILL.md) | Surgical resolution of code-review findings and bugs, including regression analysis and verification. |
+| [`pr-skills`](skills/pr-skills/SKILL.md) | Pull request, code review, surgical diff discipline, and code modification guidelines. |
+| [`commit-skills`](skills/commit-skills/SKILL.md) | Staged-only Git commit message generation (including staged new files) using the branch header and reader-friendly bullet format. |
 
 ## Using a skill
 
-Read the relevant `SKILL.md` before implementing work governed by that skill. Skills may be invoked by their name or by their documented command prefix, such as `/ui`, `/api`, `/shared`, `/plan`, or `/findings`.
+Read the relevant `SKILL.md` before implementing work governed by that skill. Skills may be invoked by their name or by their documented command prefix, such as `/ui`, `/api`, `/shared`, `/plan`, `/findings`, `/pr`, or `/commit`.
 
 When more than one skill applies, use the smallest set that covers the task. Cross-stack changes generally require both the relevant UI or API skill and [`shared-skills`](skills/shared-skills/SKILL.md).
 
@@ -35,9 +37,11 @@ When more than one skill applies, use the smallest set that covers the task. Cro
 ├── README.md
 └── skills/
     ├── api-skills/
+    ├── commit-skills/
     ├── development-standards-skills/
     ├── findings-skills/
     ├── planning-skills/
+    ├── pr-skills/
     ├── shared-skills/
     └── ui-skills/
 ```
