@@ -14,6 +14,8 @@ description: Comprehensive Angular UI engineering guidelines, component architec
   - When debouncing search terms via a `Subject` or control `valueChanges`, ALWAYS switch onto the API call stream using `switchMap` instead of nesting an unswitched/untracked `.subscribe()` inside the stream. Nested inner subscriptions create race conditions where older in-flight requests can resolve after newer requests, resulting in stale data overwriting the latest search.
   - Cancel previous in-flight requests automatically with `switchMap(() => this._fetchItems().pipe(catchError(() => of(null))))`.
   - Always pair with `distinctUntilChanged()`, `takeUntilDestroyed()`, and extract reusable data-fetching/applying helper methods (e.g. `_fetchItems()`, `_applyItems()`) shared across search streams, pagination changes, and delete/reload handlers.
+- **No Nested `.subscribe()` in Dialog Flows:** Never nest `service.mutate().subscribe()` inside `dialogRef.afterClosed().subscribe()`. Chain with `afterClosed().pipe(filter(Boolean), switchMap(...), takeUntilDestroyed(this.destroyRef)).subscribe()`.
+- **Date/Time Formatting & Shared Parsing Helpers:** Format display dates and times using Angular `DatePipe` (`| date:'EEEE, MMMM d, y'` or `new DatePipe('en-US').transform(..., 'h:mm a')`) instead of custom `Intl` or manual string building. Centralize date/time parsing helpers in a shared feature `.utils.ts` file rather than duplicating them across components.
 - **Placement of New Code & Imports:**
   - Append new methods, functions, variables, inputs, outputs, and properties to the **last part / bottom** of their respective class section or file.
   - Append new `import` statements at the **bottom / last part** of the imports block, never at the top.
@@ -63,6 +65,7 @@ description: Comprehensive Angular UI engineering guidelines, component architec
   - `match`: `true` (default: user must have ALL permissions) or `false` (ANY permission).
   - `hideWhileLoading`: Hide content while permissions are loading (default `true`).
   - `enableAnimation`: Optional fade-in when allowed.
+- **Exact Permission Alignment & Unused Module Keys:** Component `.ts` permission checks must check the exact same permission string used by the template's `<has-permission>` gate. Do not declare unused keys in `ui/src/app/core/constants/module-keys/*.ts`.
 
 ---
 
@@ -111,6 +114,34 @@ Always anticipate long unbroken text strings, concatenated slugs/identifiers, an
   - Bind error displays to specific form validation states (e.g., `formGroup.get('fieldName')?.hasError('required')`, `email`, `minlength`, `maxlength`).
   - Ensure error messages match the exact underlying validator bounds (e.g. if `maxLength(125)` is enforced, the error message must state 125 characters, not 50 or 200).
   - Ensure error messages render cleanly without breaking field alignment, pushing layout bounds, or clipping text.
+- **In-Dialog Save & Field-Level Server Errors:** Form dialogs must run the save mutation *before* closing (e.g., via a `save` callback returning `Observable<string | null>`) and close only on success so user input and selected files are never lost on server rejection. Attach server errors via `control.setErrors({ ...control.errors, server: message })` + `markAsTouched()` and render `<mat-error *ngIf="form.get('...')?.getError('server') as e">{{ e }}</mat-error>`.
+- **Keep Submit Enabled on Invalid Create Forms:** Do not bind `[disabled]="form.invalid"` on Create dialog submit buttons (which disables the button on a fresh form with no visible explanation). Disable only while saving or in Edit mode when unchanged (`isSaving || (mode === 'edit' && !hasChanges())`), and call `form.markAllAsTouched()` in `onSubmit()` when `form.invalid`.
+- **Standard House Dialog Shape & Modal Header:** Custom `MatDialog` forms must use the standard `p-6 flex flex-col w-full` layout:
+  - **Modal Header Standard:** Every modal/dialog header must strictly follow the standard 3-tier typography structure with a right-aligned close button:
+    ```html
+    <!-- Modal header -->
+    <div class="flex items-start justify-between gap-3 pb-4 mb-4 border-b border-gray-200 dark:border-slate-700 text-left">
+      <div class="min-w-0">
+        <p class="text-xs font-bold text-blue-600 uppercase tracking-wide">{{ Category / Module Eyebrow }}</p>
+        <h2 class="text-lg font-semibold text-gray-800 dark:text-white mt-0.5 break-words">
+          {{ title }}
+        </h2>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5 break-words">
+          {{ descriptive instruction / subtitle }}
+        </p>
+      </div>
+      <button type="button" (click)="cancel()" [disabled]="isSaving" class="rounded-full p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 disabled:opacity-50 disabled:pointer-events-none" aria-label="Close dialog">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+    ```
+    - **Header Typography & Element Rules:**
+      - **Eyebrow:** `<p class="text-xs font-bold text-blue-600 uppercase tracking-wide">` identifying the parent domain or module.
+      - **Title:** `<h2 class="text-lg font-semibold text-gray-800 dark:text-white mt-0.5 break-words">` with the dialog title.
+      - **Subtitle / Action Guide:** `<p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5 break-words">` providing clear context on what fields to complete or update.
+      - **Close Button:** `<button type="button" (click)="cancel()" [disabled]="isSaving" class="rounded-full p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 disabled:opacity-50 disabled:pointer-events-none" aria-label="Close dialog"><mat-icon>close</mat-icon></button>`, disabling interaction while saving to prevent dismissal during in-flight mutations.
+  - **Body:** `flex flex-col gap-4 overflow-y-auto max-h-[70vh] pr-1 -mr-1`.
+  - **Footer:** `flex items-center justify-end gap-3 pt-4 mt-4 border-t border-gray-200 dark:border-slate-700`.
 - **Numeric & Decimal Input Precision:**
   - Standard `<input type="number">` parsers strip extra decimal zeros (such as converting `0.0000` to `0`), allowing inputs with illegal decimal precision to silently bypass Angular `Validators.pattern`.
   - For strict fixed decimal amounts (e.g. monetary rates capped at 2 decimal places), prefer `<input matInput type="text" inputmode="decimal">` paired with a custom validator (`AbstractControl` validator) that verifies both string representation and regex boundaries.

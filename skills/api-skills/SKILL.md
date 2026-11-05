@@ -49,6 +49,7 @@ description: Comprehensive backend standards and guidelines for Laravel and Ligh
 - **Transaction Closures:** Prefer `DB::transaction(function() { ... })` over manual `beginTransaction()` and `commit()`.
 - **Manual Rollback Safety:** When manual `DB::beginTransaction()` is strictly required, ensure all early return/exit paths within the transaction block call `DB::rollBack()` explicitly.
 - **CRITICAL: Transaction Safety:** DO NOT execute external I/O (file uploads, S3 operations, HTTP calls, email sending) inside a database transaction. Dispatch these to a queue or execute them after the transaction successfully commits.
+- **Deferred Spatie Media Uploads & Deletions:** Never call `$model->addMedia()`, `$model->clearMediaCollection()`, or `$media->delete()` inside `DB::beginTransaction()` (especially while holding `lockForUpdate()`). Queue pending uploads and media deletions during the transaction, use `deletePreservingMedia()` when deleting models in-transaction, and execute uploads/deletions **after `DB::commit()`** so rollbacks never delete existing S3 files or orphan newly uploaded files.
 - **Transient Cache Safety:** Wrap `Cache::remember()` in a try/catch block rather than putting the try/catch inside the closure. Always calculate cache TTL dynamically using the config value (e.g., converting `filesystems.presigned_url_expiration` to seconds) instead of hardcoding TTLs.
 
 ---
@@ -66,9 +67,19 @@ description: Comprehensive backend standards and guidelines for Laravel and Ligh
     ```
   - `$customMessages` keys can target constraint names, column names, or reserved keys such as `default`, `unique`, `email`, `username`, `alias`, `composite_parent_name`, etc.
   - For authorization and validation, rely on standard exception bubbling.
+- **Structured Database Logging (`Logs::log`):** In `catch (Throwable $e)` blocks (including post-commit media upload/cleanup blocks), always record to `Logs::log(['module' => '<module.action>', 'user_id' => (int) (auth()->id() ?? 0), 'message' => $e->getMessage()])` alongside `report($e)`.
 - **Graceful Null Dereferencing:** Verify model existence before dereferencing attributes in GraphQL resolvers. Return a structured GraphQL `Error` if the record does not exist.
-- **Input Validation:** All external input must be strictly validated for type, range, format, and boundary ceilings (e.g. string length ceilings like 250 characters).
+- **Input Validation & Shared Rule Helpers:** All external input must be strictly validated for type, range, format, and boundary ceilings (e.g. string length ceilings like 250 characters). When `Create*` and `Update*` mutations share payload and nested item rules, extract them into a shared helper method (e.g., `Helper::programRules()`) rather than duplicating rule arrays.
 - **Parameterized Queries:** Use parameterized queries, prepared statements, or Eloquent/PDO bindings. Never concatenate raw user input into SQL queries.
+- **Safe Uniqueness Validation & Model Resolution (`Rule::unique()->ignoreModel()`):**
+  - **Never pass user-controlled input directly to `->ignore()`:** Passing raw user input (e.g., `$input['id']`) to `Rule::unique()->ignore($id)` risks SQL injection and malformed query strings.
+  - **Resolve the model before validating uniqueness:** In `Update*` mutations, look up the target model first (`$model = Model::find($input['id'] ?? null)`). If the record does not exist, immediately return a structured GraphQL `Error` (`['message' => '<Resource> not found.']`). This prevents running table-wide unique checks against nonexistent records.
+  - **Validate ID types:** Always validate `'id' => 'required|integer'` in validator rules.
+  - **Use `ignoreModel($model)`:** Pass the loaded Eloquent model instance directly to `Rule::unique()`:
+    ```php
+    Rule::unique('table_name', 'column_name')->ignoreModel($model)
+    ```
+    This ensures Laravel extracts the trusted, system-generated primary key from the model instance rather than raw user input.
 
 ---
 
@@ -159,7 +170,7 @@ Each GraphQL field gets **exactly one module check**. Fields with a permission a
 
 ### Step-by-Step API Implementation Checklist
 1. **Permission Constant:** Add each new permission to `config/constants.php` under `BASE_PERMISSIONS` (or `GUEST_PERMISSIONS`).
-2. **Map to One Module:** Add it, with a plain-language description, under **exactly one node** in `config/modules/<root>.php`. Choose the module that owns the feature, not the screen where it appears.
+2. **Map to One Module:** Add it, with a plain-language description that strictly reflects implemented capabilities (do not mention unimplemented actions such as manual item reordering when sorting is automatic), under **exactly one node** in `config/modules/<root>.php`. Choose the module that owns the feature, not the screen where it appears.
 3. **New Feature Area = New Child Node:** Key child nodes as `<parent.key>.<slug>`. A new top-level area gets its own `config/modules/<key>.php`, named after its root key. Never rename or reuse a seeded key, because the UI and navigation refer to it. Set `'is_system' => true` only for modules that must never be switched off.
 4. **Schema Directives:** Put `@hasPermission` or `@moduleAvailable(module: "<key>")` on every query and mutation (following the single-check table above).
 5. **Navigation Entry:** Every entry in `config/navigation/*.php` gets `'module' => '<key>'`.
