@@ -15,10 +15,11 @@ A curated collection of engineering guidance for the project’s UI, API, and cr
 | [`pr-skills`](skills/pr-skills/SKILL.md) | Pull request, code review, surgical diff discipline, and code modification guidelines. |
 | [`commit-skills`](skills/commit-skills/SKILL.md) | Staged-only Git commit message generation (including staged new files) using the branch header and reader-friendly bullet format. |
 | [`jira-description`](skills/jira-description/SKILL.md) | User-centric Jira Kanban task descriptions ("What Users See" & "What Users Can Do") supporting SED and FRD modes with MCP upload. |
+| [`obsidian-skills`](skills/obsidian-skills/SKILL.md) | Comprehensive standards for Obsidian knowledge vault documentation, note templates, and consistent agent Markdown output formatting. |
 
 ## Using a skill
 
-Read the relevant `SKILL.md` before implementing work governed by that skill. Skills may be invoked by their name or by their documented command prefix, such as `/ui`, `/api`, `/shared`, `/plan`, `/findings`, `/pr`, `/commit`, or `/jira-description`.
+Read the relevant `SKILL.md` before implementing work governed by that skill. Skills may be invoked by their name or by their documented command prefix, such as `/ui`, `/api`, `/shared`, `/plan`, `/findings`, `/pr`, `/commit`, `/jira-description`, or `/obsidian`.
 
 When more than one skill applies, use the smallest set that covers the task. Cross-stack changes generally require both the relevant UI or API skill and [`shared-skills`](skills/shared-skills/SKILL.md).
 
@@ -49,7 +50,8 @@ When more than one skill applies, use the smallest set that covers the task. Cro
     ├── planning-skills/
     ├── pr-skills/
     ├── shared-skills/
-    └── ui-skills/
+    ├── ui-skills/
+    └── obsidian-skills/
 ```
 
 Each skill directory can evolve independently, but its `SKILL.md` should remain clear about scope, trigger conditions, implementation rules, and verification requirements.
